@@ -26,10 +26,11 @@ def generate_kaggle_notebook():
                 "metadata": {},
                 "outputs": [],
                 "source": [
-                    "!git clone https://github.com/your-username/vision-SARVAM.git\n",
-                    "%cd vision-SARVAM\n",
+                    "!git clone https://github.com/srishanthsriramula/Lumina-JEPA.git\n",
+                    "%cd Lumina-JEPA\n",
                     "!pip install -r requirements.txt\n",
-                    "!pip install publaynet doclaynet fiftyone"
+                    "!pip install publaynet doclaynet fiftyone\n",
+                    "!python data/download.py --dataset doclaynet"
                 ]
             },
             {
