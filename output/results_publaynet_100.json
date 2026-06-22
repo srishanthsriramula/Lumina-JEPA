@@ -1,0 +1,78 @@
+{
+  "dataset": "publaynet",
+  "num_pages": 100,
+  "elapsed_seconds": 0.24,
+  "metrics": {
+    "compression": {
+      "mean": 300.92278129981736,
+      "median": 240.94117647058823,
+      "min": 136.53333333333333,
+      "max": 819.2,
+      "std": 157.53472447063558,
+      "count": 100,
+      "empty_pages": 0
+    },
+    "reading_order": {
+      "mean": -0.015505552035167104,
+      "median": 0.0,
+      "min": -0.5238095238095238,
+      "max": 0.5757575757575757,
+      "std": 0.1915331951001815,
+      "count": 100
+    },
+    "ocr_area": {
+      "mean": 0.554295249083675,
+      "median": 0.572477034019473,
+      "min": 0.09157156396509161,
+      "max": 0.8360706631925218,
+      "std": 0.1604120648589537,
+      "count": 100
+    },
+    "information_retention": {
+      "accuracy": 0.0,
+      "n_train": 0,
+      "n_test": 0,
+      "per_class": {}
+    }
+  },
+  "targets": {
+    "compression_ratio_mean": {
+      "target": 50.0,
+      "direction": "higher_is_better"
+    },
+    "reading_order_tau_mean": {
+      "target": 0.6,
+      "direction": "higher_is_better"
+    },
+    "ocr_area_ratio_mean": {
+      "target": 0.0,
+      "direction": "informational"
+    },
+    "information_retention_acc": {
+      "target": 0.5,
+      "direction": "higher_is_better"
+    }
+  },
+  "pass_fail": {
+    "compression_ratio_mean": {
+      "value": 300.9228,
+      "target": 50.0,
+      "passed": true
+    },
+    "reading_order_tau_mean": {
+      "value": -0.0155,
+      "target": 0.6,
+      "passed": false
+    },
+    "ocr_area_ratio_mean": {
+      "value": 0.5543,
+      "target": 0.0,
+      "passed": null
+    },
+    "information_retention_acc": {
+      "value": 0.0,
+      "target": 0.5,
+      "passed": false
+    }
+  }
+}

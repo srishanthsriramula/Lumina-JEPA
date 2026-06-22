@@ -1,0 +1,139 @@
+{
+  "dataset": "doclaynet",
+  "num_pages": 64,
+  "elapsed_seconds": 3.56,
+  "metrics": {
+    "compression": {
+      "mean": 77.16342731732995,
+      "median": 45.010989010989015,
+      "min": 12.08259587020649,
+      "max": 682.6666666666666,
+      "std": 104.98335501662427,
+      "count": 64,
+      "empty_pages": 1
+    },
+    "reading_order": {
+      "mean": 0.5385215925658817,
+      "median": 0.6367543859649123,
+      "min": -0.6822188476374997,
+      "max": 1.0,
+      "std": 0.4486244302059204,
+      "count": 64
+    },
+    "ocr_area": {
+      "mean": 0.2428442296252231,
+      "median": 0.25492873289708506,
+      "min": 0.0,
+      "max": 0.5208252230814991,
+      "std": 0.16102942276170606,
+      "count": 64
+    },
+    "information_retention": {
+      "accuracy": 0.9268098647573588,
+      "n_train": 5025,
+      "n_test": 1257,
+      "per_class": {
+        "caption": {
+          "precision": 0.8571428571428571,
+          "recall": 0.6666666666666666,
+          "f1-score": 0.75,
+          "support": 9.0
+        },
+        "figure": {
+          "precision": 0.9615384615384616,
+          "recall": 1.0,
+          "f1-score": 0.9803921568627451,
+          "support": 50.0
+        },
+        "footnote": {
+          "precision": 1.0,
+          "recall": 0.375,
+          "f1-score": 0.5454545454545454,
+          "support": 8.0
+        },
+        "formula": {
+          "precision": 0.984375,
+          "recall": 0.8076923076923077,
+          "f1-score": 0.8873239436619719,
+          "support": 78.0
+        },
+        "list": {
+          "precision": 0.9405940594059405,
+          "recall": 1.0,
+          "f1-score": 0.9693877551020408,
+          "support": 95.0
+        },
+        "page-footer": {
+          "precision": 0.8333333333333334,
+          "recall": 0.7692307692307693,
+          "f1-score": 0.8,
+          "support": 13.0
+        },
+        "page-header": {
+          "precision": 0.6923076923076923,
+          "recall": 0.6923076923076923,
+          "f1-score": 0.6923076923076923,
+          "support": 13.0
+        },
+        "table": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 320.0
+        },
+        "text": {
+          "precision": 0.8924242424242425,
+          "recall": 0.9865996649916248,
+          "f1-score": 0.9371519490851233,
+          "support": 597.0
+        },
+        "title": {
+          "precision": 0.8,
+          "recall": 0.2702702702702703,
+          "f1-score": 0.40404040404040403,
+          "support": 74.0
+        }
+      }
+    }
+  },
+  "targets": {
+    "compression_ratio_mean": {
+      "target": 50.0,
+      "direction": "higher_is_better"
+    },
+    "reading_order_tau_mean": {
+      "target": 0.6,
+      "direction": "higher_is_better"
+    },
+    "ocr_area_ratio_mean": {
+      "target": 0.0,
+      "direction": "informational"
+    },
+    "information_retention_acc": {
+      "target": 0.5,
+      "direction": "higher_is_better"
+    }
+  },
+  "pass_fail": {
+    "compression_ratio_mean": {
+      "value": 77.1634,
+      "target": 50.0,
+      "passed": true
+    },
+    "reading_order_tau_mean": {
+      "value": 0.5385,
+      "target": 0.6,
+      "passed": false
+    },
+    "ocr_area_ratio_mean": {
+      "value": 0.2428,
+      "target": 0.0,
+      "passed": null
+    },
+    "information_retention_acc": {
+      "value": 0.9268,
+      "target": 0.5,
+      "passed": true
+    }
+  }
+}
