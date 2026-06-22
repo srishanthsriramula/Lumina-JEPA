@@ -19,10 +19,11 @@ from models.vision import SelectiveVisualEncoder
 
 def get_kaggle_dataset_path():
     """Helper to find the dataset path in Kaggle or fallback to local config."""
-    # This is a common pattern for Kaggle datasets
-    kaggle_path = "/kaggle/input/doclaynet/COCO/train.json"
-    if os.path.exists(kaggle_path):
-        return "/kaggle/input/doclaynet"
+    if os.path.exists("/kaggle/input"):
+        for root, dirs, files in os.walk("/kaggle/input"):
+            if "COCO" in dirs and "PNG" in dirs:
+                print(f"Auto-detected Kaggle dataset at: {root}")
+                return root
     return "doclaynet"  # Fallback to local config lookup in data/loader.py
 
 def main():
