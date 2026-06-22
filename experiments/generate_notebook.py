@@ -29,8 +29,7 @@ def generate_kaggle_notebook():
                     "!git clone https://github.com/srishanthsriramula/Lumina-JEPA.git\n",
                     "%cd Lumina-JEPA\n",
                     "!pip install -r requirements.txt\n",
-                    "!pip install fiftyone\n",
-                    "!python data/download.py --dataset doclaynet"
+                    "!pip install fiftyone"
                 ]
             },
             {

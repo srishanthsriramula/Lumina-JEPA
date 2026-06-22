@@ -81,11 +81,14 @@ def main():
         optimizer.zero_grad()
         
         for idx, page in enumerate(tqdm(pages_generator, total=num_pages, desc="Training")):
-            # Note: In a true production environment, raw_image would be loaded from disk using page.page_id
-            # For this script to not crash if the image files aren't perfectly mapped in Kaggle yet, 
-            # we generate a dummy image so the Selective Vision cropper can run its tensor ops.
-            # IN PRODUCTION: raw_image = Image.open(f"/kaggle/input/doclaynet/PNG/{page.page_id}.png").convert("RGB")
-            raw_image = Image.new('RGB', (1024, 1024), color='white')
+            # Load the actual PNG image for true Vision-Fusion training.
+            try:
+                # Based on the standard Kaggle dataset structure
+                img_path = f"{dataset_name}/PNG/{page.page_id}.png"
+                raw_image = Image.open(img_path).convert("RGB")
+            except Exception as e:
+                # Fallback to white image if something goes wrong so the loop doesn't instantly crash
+                raw_image = Image.new('RGB', (1024, 1024), color='white')
             
             # Build graph and run Vision Cropper
             dg = build_graphs([page], raw_images=[raw_image], visual_encoder=vision_encoder)[0]
