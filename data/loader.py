@@ -274,6 +274,14 @@ def _find_annotation_file(dataset: str, split: str = "val") -> Path:
     Raises ``FileNotFoundError`` with a helpful message if the file is
     missing (the user probably needs to run ``data/download.py`` first).
     """
+    import os
+    if os.path.exists(dataset):
+        p = Path(dataset)
+        candidates = [p / "COCO" / f"{split}.json", p / f"{split}.json"]
+        for c in candidates:
+            if c.exists():
+                return c
+
     if dataset == "publaynet":
         # HF-mirror download stores e.g. publaynet/val.json
         candidates = [
