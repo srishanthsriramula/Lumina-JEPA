@@ -154,11 +154,16 @@ def main():
     # Cast to LLM's expected dtype (e.g., bfloat16 for TinyLlama)
     combined_embeds = combined_embeds.to(llm.dtype)
     
+    # Create the proper attention mask for the combined length
+    # Shape: [batch_size, sequence_length] -> [1, num_graph_tokens + num_text_tokens]
+    attention_mask = torch.ones(combined_embeds.shape[:2], dtype=torch.long, device=device)
+    
     # 7. Generate Response
     print("Generating response...")
     with torch.no_grad():
         outputs = llm.generate(
             inputs_embeds=combined_embeds,
+            attention_mask=attention_mask,
             max_new_tokens=100,
             temperature=0.7,
             do_sample=True,
