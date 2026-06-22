@@ -33,9 +33,6 @@ scikit-learn>=1.3
 requests>=2.31
 
 # Dataset loading (PubLayNet / DocLayNet via FiftyOne Zoo)
-fiftyone>=0.23
-publaynet
-doclaynet
 torch
 torch_geometric
 transformers
