@@ -42,17 +42,13 @@ def main():
     
     jepa = DocumentJEPA(d_model=256).to(device)
     
-    # Wrap JEPA in DataParallel to utilize both T4 GPUs if available
-    if num_gpus > 1:
-        print("Wrapping JEPA in DataParallel for multi-GPU training...")
-        jepa = nn.DataParallel(jepa)
+    # We cannot use standard nn.DataParallel with PyTorch Geometric graphs 
+    # because it splits tensors on dim=0, which breaks node indices and edge pairs.
+    # Training will proceed on a single GPU (cuda:0), which is still very fast.
     
     # 3. Optimizer & Schedulers
     # Note: Only optimize context_encoder parameters. Target encoder is EMA updated.
-    if num_gpus > 1:
-        optimizer = optim.AdamW(jepa.module.context_encoder.parameters(), lr=1e-4, weight_decay=1e-4)
-    else:
-        optimizer = optim.AdamW(jepa.context_encoder.parameters(), lr=1e-4, weight_decay=1e-4)
+    optimizer = optim.AdamW(jepa.context_encoder.parameters(), lr=1e-4, weight_decay=1e-4)
         
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-6)
     
@@ -166,10 +162,7 @@ def main():
                 optimizer.zero_grad()
                 
                 # EMA Update Target Encoder
-                if num_gpus > 1:
-                    jepa.module.update_target_encoder()
-                else:
-                    jepa.update_target_encoder()
+                jepa.update_target_encoder()
                     
         # Step LR schedule
         scheduler.step()
@@ -178,9 +171,8 @@ def main():
         print(f"Epoch {epoch+1} Completed. Avg Loss: {avg_loss:.4f}")
         
         # Save Checkpoint
-        model_to_save = jepa.module if num_gpus > 1 else jepa
         checkpoint_path = f"checkpoints/jepa_epoch_{epoch+1}.pt"
-        torch.save(model_to_save.state_dict(), checkpoint_path)
+        torch.save(jepa.state_dict(), checkpoint_path)
         print(f"Checkpoint saved to {checkpoint_path}")
 
 if __name__ == "__main__":
