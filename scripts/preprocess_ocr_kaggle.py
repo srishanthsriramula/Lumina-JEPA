@@ -4,16 +4,63 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 from paddleocr import PaddleOCR
+import concurrent.futures
+from functools import partial
 
 # Kaggle Dataset Path
 KAGGLE_DATA_DIR = "/kaggle/input/datasets/srishanthsriramula/doclaynet-core"
 
-def main():
-    print("Initializing PaddleOCR...")
-    # Initialize PaddleOCR (English, fast mode)
-    ocr = PaddleOCR(use_angle_cls=False, lang='en', show_log=False)
+# Initialize OCR per process to avoid memory/thread issues
+ocr_instance = None
+
+def init_worker():
+    global ocr_instance
+    # Fast mode English OCR
+    ocr_instance = PaddleOCR(use_angle_cls=False, lang='en', show_log=False)
+
+def process_image(img_id, img_info, img_to_anns):
+    global ocr_instance
+    if ocr_instance is None:
+        init_worker()
+        
+    img_filename = img_info['file_name']
+    img_path = os.path.join(KAGGLE_DATA_DIR, "PNG", img_filename)
     
-    # Load COCO JSON
+    if not os.path.exists(img_path):
+        return img_filename, None
+        
+    try:
+        full_image = Image.open(img_path).convert("RGB")
+        full_image_np = np.array(full_image)
+        page_data = {}
+        
+        for ann in img_to_anns.get(img_id, []):
+            x, y, w, h = [int(v) for v in ann['bbox']]
+            x = max(0, x)
+            y = max(0, y)
+            w = min(w, full_image_np.shape[1] - x)
+            h = min(h, full_image_np.shape[0] - y)
+            
+            if w <= 0 or h <= 0:
+                page_data[ann['id']] = ""
+                continue
+                
+            crop_np = full_image_np[y:y+h, x:x+w]
+            result = ocr_instance.ocr(crop_np, cls=False)
+            
+            text_content = ""
+            if result and result[0]:
+                texts = [line[1][0] for line in result[0] if line is not None]
+                text_content = " ".join(texts)
+            
+            page_data[ann['id']] = text_content
+            
+        return img_filename, page_data
+    except Exception as e:
+        print(f"Error processing {img_filename}: {e}")
+        return img_filename, None
+
+def main():
     json_path = os.path.join(KAGGLE_DATA_DIR, "COCO", "val.json")
     if not os.path.exists(json_path):
         print(f"Error: Could not find {json_path}")
@@ -25,7 +72,6 @@ def main():
     images = {img['id']: img for img in coco_data['images']}
     annotations = coco_data['annotations']
     
-    # Group annotations by image
     img_to_anns = {}
     for ann in annotations:
         img_id = ann['image_id']
@@ -33,68 +79,32 @@ def main():
             img_to_anns[img_id] = []
         img_to_anns[img_id].append(ann)
         
-    print(f"Found {len(images)} images in validation set.")
+    print(f"Found {len(images)} images in validation set. Starting multiprocessing...")
     
     output_data = {}
     output_file = "ocr_texts.json"
     
-    # Process each image
-    # Note: On a massive dataset, we would batch this or use PyTorch DataLoader
-    # For now, we process sequentially with a progress bar
-    for img_id, img_info in tqdm(images.items(), desc="Extracting OCR Text"):
-        img_filename = img_info['file_name']
-        img_path = os.path.join(KAGGLE_DATA_DIR, "PNG", img_filename)
+    # Use ThreadPoolExecutor or ProcessPoolExecutor
+    # Kaggle usually has 4+ cores. ProcessPool is safer for PaddleOCR memory.
+    max_workers = os.cpu_count() or 4
+    print(f"Using {max_workers} cores for OCR extraction.")
+    
+    process_func = partial(process_image, img_to_anns=img_to_anns)
+    
+    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers, initializer=init_worker) as executor:
+        # Map inputs
+        futures = {executor.submit(process_func, img_id, img_info): img_filename 
+                   for img_id, img_info in images.items()}
         
-        if not os.path.exists(img_path):
-            continue
-            
-        try:
-            # Load full image
-            full_image = Image.open(img_path).convert("RGB")
-            full_image_np = np.array(full_image)
-            
-            page_data = {}
-            
-            # Process each bounding box in the image
-            for ann in img_to_anns.get(img_id, []):
-                x, y, w, h = [int(v) for v in ann['bbox']]
+        for future in tqdm(concurrent.futures.as_completed(futures), total=len(images), desc="Extracting OCR Text"):
+            img_filename, page_data = future.result()
+            if page_data is not None:
+                output_data[img_filename] = page_data
                 
-                # Ensure valid crop coordinates
-                x = max(0, x)
-                y = max(0, y)
-                w = min(w, full_image_np.shape[1] - x)
-                h = min(h, full_image_np.shape[0] - y)
-                
-                if w <= 0 or h <= 0:
-                    page_data[ann['id']] = ""
-                    continue
+            if len(output_data) > 0 and len(output_data) % 500 == 0:
+                with open(output_file, 'w') as f:
+                    json.dump(output_data, f)
                     
-                # Crop image array
-                crop_np = full_image_np[y:y+h, x:x+w]
-                
-                # Run PaddleOCR
-                # OCR returns a list of lines, each line is [coords, (text, confidence)]
-                result = ocr.ocr(crop_np, cls=False)
-                
-                text_content = ""
-                if result and result[0]:
-                    # Join all detected text lines in the box
-                    texts = [line[1][0] for line in result[0] if line is not None]
-                    text_content = " ".join(texts)
-                
-                page_data[ann['id']] = text_content
-                
-            output_data[img_filename] = page_data
-            
-        except Exception as e:
-            print(f"Error processing {img_filename}: {e}")
-            
-        # Periodically save to prevent data loss on massive runs
-        if len(output_data) % 100 == 0:
-            with open(output_file, 'w') as f:
-                json.dump(output_data, f)
-                
-    # Final save
     with open(output_file, 'w') as f:
         json.dump(output_data, f)
         
