@@ -84,11 +84,22 @@ def main():
     
     optimizer = optim.AdamW(jepa.parameters(), lr=1e-4, weight_decay=0.01)
     
-    # Load Dataset
-    dataset = DocLayNetKaggleDataset(
-        json_path=os.path.join(KAGGLE_DATA_DIR, "COCO", "train.json"),
-        image_dir=os.path.join(KAGGLE_DATA_DIR, "PNG")
-    )
+    print("Loading Massive Combined Dataset (train, val, test)...")
+    datasets = []
+    for split in ["train.json", "val.json", "test.json"]:
+        json_path = os.path.join(KAGGLE_DATA_DIR, "COCO", split)
+        if os.path.exists(json_path):
+            datasets.append(
+                DocLayNetKaggleDataset(
+                    json_path=json_path,
+                    image_dir=os.path.join(KAGGLE_DATA_DIR, "PNG")
+                )
+            )
+            print(f"Added {split} split to training set.")
+    
+    from torch.utils.data import ConcatDataset
+    dataset = ConcatDataset(datasets)
+    print(f"Total Combined Training Images: {len(dataset)}")
     
     scaler = torch.cuda.amp.GradScaler(enabled=True)
     epochs = 3

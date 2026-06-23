@@ -62,31 +62,38 @@ def process_image(img_id, img_info, img_to_anns):
         return img_filename, None
 
 def main():
-    json_path = os.path.join(DATA_DIR, "COCO", "val.json")
-    if not os.path.exists(json_path):
-        print(f"Error: Could not find {json_path}")
+    splits = ["train.json", "val.json", "test.json"]
+    images = {}
+    img_to_anns = {}
+    
+    for split in splits:
+        json_path = os.path.join(DATA_DIR, "COCO", split)
+        if not os.path.exists(json_path):
+            print(f"Skipping {split}: not found")
+            continue
+            
+        with open(json_path, 'r') as f:
+            coco_data = json.load(f)
+            
+        for img in coco_data['images']:
+            images[img['id']] = img
+            
+        for ann in coco_data['annotations']:
+            img_id = ann['image_id']
+            if img_id not in img_to_anns:
+                img_to_anns[img_id] = []
+            img_to_anns[img_id].append(ann)
+            
+    if not images:
+        print("Error: No images found in any dataset split!")
         return
         
-    with open(json_path, 'r') as f:
-        coco_data = json.load(f)
-        
-    images = {img['id']: img for img in coco_data['images']}
-    annotations = coco_data['annotations']
-    
-    img_to_anns = {}
-    for ann in annotations:
-        img_id = ann['image_id']
-        if img_id not in img_to_anns:
-            img_to_anns[img_id] = []
-        img_to_anns[img_id].append(ann)
-        
-    print(f"Found {len(images)} images in validation set. Starting multiprocessing...")
+    print(f"Found {len(images)} total images across all splits. Starting multiprocessing...")
     
     output_data = {}
     output_file = "ocr_texts.json"
     
-    # Use ThreadPoolExecutor or ProcessPoolExecutor
-    # Kaggle usually has 4+ cores. ProcessPool is safer for PaddleOCR memory.
+    # Use ProcessPoolExecutor to use all cores on the A100
     max_workers = os.cpu_count() or 4
     print(f"Using {max_workers} cores for OCR extraction.")
     
@@ -109,7 +116,7 @@ def main():
     with open(output_file, 'w') as f:
         json.dump(output_data, f)
         
-    print(f"\nSuccessfully extracted text for {len(output_data)} documents.")
+    print(f"\nSuccessfully extracted text for {len(output_data)} total documents.")
     print(f"Saved to {output_file}")
 
 if __name__ == "__main__":
