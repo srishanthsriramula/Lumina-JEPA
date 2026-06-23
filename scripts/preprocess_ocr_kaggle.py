@@ -16,7 +16,8 @@ ocr_instance = None
 def init_worker():
     global ocr_instance
     # Fast mode English OCR
-    ocr_instance = PaddleOCR(use_angle_cls=False, lang='en', show_log=False)
+    # Removing 'show_log' to fix ValueError and replacing 'use_angle_cls' with 'use_textline_orientation'
+    ocr_instance = PaddleOCR(use_textline_orientation=False, lang='en')
 
 def process_image(img_id, img_info, img_to_anns):
     global ocr_instance
