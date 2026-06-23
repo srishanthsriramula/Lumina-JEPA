@@ -86,9 +86,8 @@ def main():
     
     # Load Dataset
     dataset = DocLayNetKaggleDataset(
-        json_path=os.path.join(KAGGLE_DATA_DIR, "COCO", "val.json"),
-        image_dir=os.path.join(KAGGLE_DATA_DIR, "PNG"),
-        max_samples=5000 # Use a subset for testing, change to None for full run
+        json_path=os.path.join(KAGGLE_DATA_DIR, "COCO", "train.json"),
+        image_dir=os.path.join(KAGGLE_DATA_DIR, "PNG")
     )
     
     scaler = torch.cuda.amp.GradScaler(enabled=True)
