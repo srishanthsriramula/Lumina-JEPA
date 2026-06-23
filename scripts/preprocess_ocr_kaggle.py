@@ -7,8 +7,8 @@ from paddleocr import PaddleOCR
 import concurrent.futures
 from functools import partial
 
-# Kaggle Dataset Path
-KAGGLE_DATA_DIR = "/kaggle/input/datasets/srishanthsriramula/doclaynet-core"
+# Dataset Path (Can be overridden by environment variable)
+DATA_DIR = os.environ.get("DOCLAYNET_DIR", "./DocLayNet_core")
 
 # Initialize OCR per process to avoid memory/thread issues
 ocr_instance = None
@@ -24,7 +24,7 @@ def process_image(img_id, img_info, img_to_anns):
         init_worker()
         
     img_filename = img_info['file_name']
-    img_path = os.path.join(KAGGLE_DATA_DIR, "PNG", img_filename)
+    img_path = os.path.join(DATA_DIR, "PNG", img_filename)
     
     if not os.path.exists(img_path):
         return img_filename, None
@@ -61,7 +61,7 @@ def process_image(img_id, img_info, img_to_anns):
         return img_filename, None
 
 def main():
-    json_path = os.path.join(KAGGLE_DATA_DIR, "COCO", "val.json")
+    json_path = os.path.join(DATA_DIR, "COCO", "val.json")
     if not os.path.exists(json_path):
         print(f"Error: Could not find {json_path}")
         return
